@@ -5,13 +5,26 @@ from langchain_aws import ChatBedrock
 from rag_app.get_chroma_db import get_chroma_db
 
 PROMPT_TEMPLATE = """
-Answer the question based only on the following context:
+You are a HR assistant for a Data Science company that analyzes resume and cover letter. Make your response as concise as possible, with no introduction or background at the start and answer the question based only on the following context:
+You are looking for a data scientist for your team.
+
 
 {context}
 
 ---
 
-Answer the question based on the above context: {question}
+QUESTION:
+{question}
+
+---
+
+INSTRUCTIONS:
+Answer the users QUESTION using the DOCUMENT text above.
+Keep your answer ground in the facts of the DOCUMENT.
+Keep your answer concise and reformulate what is inside the document instead of citing it.
+Emphasize skills related to data science in priority.
+Try to be impactful and dynamic.
+If the DOCUMENT does not contain the facts to answer the QUESTION return "NONE".
 """
 
 BEDROCK_MODEL_ID = "anthropic.claude-3-haiku-20240307-v1:0"
@@ -28,7 +41,7 @@ def query_rag(query_text: str) -> QueryResponse:
     db = get_chroma_db()
 
     # Search the DB.
-    results = db.similarity_search_with_score(query = query_text, k=3)
+    results = db.similarity_search_with_score(query = query_text, k=6)
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
@@ -47,4 +60,4 @@ def query_rag(query_text: str) -> QueryResponse:
 
 
 if __name__ == "__main__":
-    query_rag("How can I contact support ?")
+    query_rag("Why should I hire Pascal ?")
